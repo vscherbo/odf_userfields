@@ -29,21 +29,21 @@ plpy.notice('ODT: Template name={0}'.format(templ_name))
 try:
     doc = load(templ_name)
 except BaseException:
-    (e_type, err_text, e_traceback) = sys.exc_info()
-    return '{0}: {1}#{2}#{3}'.format(templ_name, e_type, err_text, e_traceback)
+    (e_type, e_text, e_traceback) = sys.exc_info()
+    return '{0}: {1}#{2}'.format(templ_name, e_type, e_text)
 
 out_name = u'{0}/{1}'.format(out_path, arg_outfile)
 try:
     doc.save(out_name)
 except BaseException:
-    (e_type, err_text, e_traceback) = sys.exc_info()
-    return '{0}: {1}#{2}#{3}'.format(templ_name, e_type, err_text, e_traceback)
+    (e_type, e_text, e_traceback) = sys.exc_info()
+    return '{0}: {1}'.format(out_name, e_text)
 
 try:
     obj = UserFields(out_name.decode('utf-8'), out_name.decode('utf-8'))
 except BaseException:
-    (e_type, err_text, e_traceback) = sys.exc_info()
-    return '{0}: {1}#{2}#{3}'.format(templ_name, e_type, err_text, e_traceback)
+    (e_type, e_text, e_traceback) = sys.exc_info()
+    return '{0}: {1}'.format(templ_name, e_text)
 
 upd_dict={}
 loc_warn = []
@@ -63,10 +63,9 @@ plpy.notice('upd_dict={0}'.format(upd_dict))
 
 try:
     obj.update(upd_dict)
-except Exception as e:
-    err_code, err_text = e.args
-    return 'update failed code={0}, err={1}'.format(err_code, err_text)
-
+except BaseException:
+    (e_type, e_text, e_traceback) = sys.exc_info()
+    return 'update failed e_type={0}, e_text={1}'.format(e_type, e_text)
 
 return loc_res
 $BODY$
