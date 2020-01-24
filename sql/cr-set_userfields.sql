@@ -24,15 +24,15 @@ if len(res) != 1:
 else:
     plpy.notice('res[0]={0}'.format(res[0]))
 
-templ_name = u'{0}/{1}'.format(templ_path, arg_templ)
-plpy.notice('ODT: Template name={0}'.format(templ_name))
+templ_name = u'{0}/{1}'.format(templ_path, arg_templ.decode('utf-8'))
+plpy.notice('ODT: Template name={0}'.format(templ_name.encode('utf-8')))
 try:
     doc = load(templ_name)
 except BaseException:
     (e_type, e_text, e_traceback) = sys.exc_info()
     return '{0}: {1}#{2}'.format(templ_name, e_type, e_text)
 
-out_name = u'{0}/{1}'.format(out_path, arg_outfile)
+out_name = u'{0}/{1}'.format(out_path, arg_outfile.decode('utf-8'))
 try:
     doc.save(out_name)
 except BaseException:
@@ -40,7 +40,7 @@ except BaseException:
     return '{0}: {1}'.format(out_name, e_text)
 
 try:
-    obj = UserFields(out_name.decode('utf-8'), out_name.decode('utf-8'))
+    obj = UserFields(out_name, out_name)
 except BaseException:
     (e_type, e_text, e_traceback) = sys.exc_info()
     return '{0}: {1}'.format(templ_name, e_text)
