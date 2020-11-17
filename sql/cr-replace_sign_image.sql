@@ -47,7 +47,12 @@ except BaseException:
 
 
 stamp_name = u'{0}/{1}'.format(templ_path, arg_img_file.decode('utf-8'))
-im = PImage.open(stamp_name)
+try:
+    im = PImage.open(stamp_name)
+except IOError:    
+    (e_type, e_text, e_traceback) = sys.exc_info()
+    return u'{0}: {1}'.format(arg_img_file.decode('utf-8'), str(e_text))
+
 (width, height) = im.size
 plpy.notice('image W={0} H={1}'.format(width, height))
 
