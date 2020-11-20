@@ -11,6 +11,7 @@ from odf.text import P
 #from odf.userfield import UserFields
 from odf.table import Table, TableRow, TableCell
 #from odf.table import Table, TableColumn, TableRow
+import odf.style
 
 TABLE_ITEMS = 'table_items'
 
@@ -36,12 +37,34 @@ ROW1 = {
 def main():
     """Just main"""
     out_dir = u'/smb/system/Scripts/odf_userfields/Contracts/Docs/Bil/2020'
-    out_filename = u"{0}/{1}".format(out_dir, u'ДС-82241283.odt') #.decode('utf-8')
+    #out_filename = u"{0}/{1}".format(out_dir, u'ДС-82241283.odt') #.decode('utf-8')
+    out_filename = u"{0}/{1}".format(out_dir, u'1224-4218-Счет-факс.odt') #.decode('utf-8')
 
     #print('t={0}, o={1}'.format(templ_filename, out_filename))
 
     doc = load(out_filename)
 
+    for elem in doc.getElementsByType(Table):
+        if elem.getAttribute('name') == TABLE_ITEMS:
+            row1 = elem.getElementsByType(TableRow)[1]
+            print(row1)
+            for k in row1.attributes.keys():
+                print(k[1], ":", row1.attributes[k])
+            print('----------------------')
+            for chld in elem.childNodes:
+                print(chld.qname)
+                if chld.qname[1] == 'table-row':
+                    for atr in chld.allowed_attributes():
+                        print(atr)
+                        #if atr[1] == 'style-name':
+                        try:
+                            #print(elem.getAttribute(atr[1]))
+                            print(elem.getAttribute("stylename"))
+                        except ValueError:
+                            print(ValueError)
+                    break
+
+    """
     print(ROW1["round"])
     ord_dict = OrderedDict()
     ord_dict[1] = ROW1["ПозицияСчета"]
@@ -63,6 +86,7 @@ def main():
 
 
     doc.save(out_filename)
+    """
 
 if __name__ == '__main__':
     main()

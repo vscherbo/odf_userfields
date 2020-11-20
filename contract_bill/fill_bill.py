@@ -6,6 +6,8 @@
 
 from collections import OrderedDict
 from odf.opendocument import load
+from odf.style import Style, TableCellProperties
+#from odf.style import Style, TableColumnProperties, TableCellProperties, ParagraphProperties
 #from odf.text import P, H
 from odf.text import P
 #from odf.userfield import UserFields
@@ -18,8 +20,10 @@ import log_app
 TABLE_ITEMS = 'table_items'
 #BILL_NO = 82241283
 SQL_BILL_ITEMS = """
-SELECT "ПозицияСчета", "Наименование", "Ед Изм", "Кол-во", "ЦенаНДС",
-round ("Кол-во"*"ЦенаНДС", 2) total
+SELECT "ПозицияСчета", "Наименование", "Ед Изм"
+, round("Кол-во", 1) "Кол-во"
+, round("ЦенаНДС",2) "ЦенаНДС"
+, round ("Кол-во"*"ЦенаНДС", 2) total
 FROM arc_energo."Содержание счета" ss
 WHERE ss."№ счета" = %s
 order by "ПозицияСчета"
@@ -49,6 +53,21 @@ BILL_ITEMS = [
         "total" : 2000.00
     }
     ]
+
+def get_styles(doc):
+    """ get doc styles"""
+    styles = {}
+    for ast in doc.automaticstyles.childNodes:
+        name = ast.getAttribute('name')
+        style = {}
+        styles[name] = style
+
+        for k in ast.attributes.keys():
+            style[k[1]] = ast.attributes[k]
+        for nod in ast.childNodes:
+            for k in nod.attributes.keys():
+                style[nod.qname[1] + "/" + k[1]] = nod.attributes[k]
+        return styles
 
 
 class FillTable(log_app.LogApp):
@@ -81,6 +100,7 @@ class FillTable(log_app.LogApp):
                 ret_val = True
         return ret_val
 
+
     def fill_bill_table(self):
         """Fill a table of a bill's items"""
         #out_dir = u'/smb/system/Scripts/odf_userfields/Contracts/Docs/Bil/2020'
@@ -89,29 +109,59 @@ class FillTable(log_app.LogApp):
         #print('t={0}, o={1}'.format(templ_filename, doc_name))
 
         doc = load(doc_name)
+        bill_cell_style = Style(name="bill cell style", family="table-cell")
+        #ill_cell_style.addElement(TableCellProperties(border="0.3pt solid #000000"))
+        bill_cell_style.addElement(TableCellProperties())
 
-        for row_bill in self.bill_items:
-            print(row_bill["total"])
-            ord_dict = OrderedDict()
-            ord_dict[1] = row_bill["ПозицияСчета"]
-            ord_dict[2] = row_bill["Наименование"]
-            ord_dict[3] = row_bill["Ед Изм"]
-            ord_dict[4] = row_bill["Кол-во"]
-            ord_dict[5] = row_bill["ЦенаНДС"]
-            ord_dict[6] = row_bill["total"]
+        """
+        pstyle = Style(name="paragraph style", family="paragraph")
+        pstyle.addElement(ParagraphProperties(textalign="center"))
+        money_style = Style(name="money style", family="paragraph")
+        money_style.addElement(ParagraphProperties(textalign="right"))
+        """
 
-            for elem in doc.getElementsByType(Table):
-                if elem.getAttribute('name') == TABLE_ITEMS:
+        #money_col_style = Style(name="money col style", family="table-column")
+        #money_col_style.addElement(TableColumnProperties(textalign="right"))
+
+        doc.styles.addElement(bill_cell_style)
+        #doc.styles.addElement(pstyle)
+        #doc.styles.addElement(money_style)
+        #doc.styles.addElement(money_col_style)
+
+        for elem in doc.getElementsByType(Table):
+            if elem.getAttribute('name') == TABLE_ITEMS:
+                #tab = elem
+                row1 = elem.getElementsByType(TableRow)[1]
+                #row_last = elem.getElementsByType(TableRow)[-1]
+                print('row1=', row1)
+                cells = row1.getElementsByType(TableCell)
+                cell_style = cells[0].getAttribute("stylename")
+                for row_bill in self.bill_items:
+                    #print('total=', row_bill["total"])
+                    ord_dict = OrderedDict()
+                    ord_dict[1] = row_bill["ПозицияСчета"]
+                    ord_dict[2] = row_bill["Наименование"]
+                    ord_dict[3] = row_bill["Ед Изм"]
+                    ord_dict[4] = row_bill["Кол-во"]
+                    ord_dict[5] = row_bill["ЦенаНДС"]
+                    ord_dict[6] = row_bill["total"]
+
                     tr1 = TableRow()
-                    for val in ord_dict.values():  # OrderedDict(ROW1).values():
-                        tc1 = TableCell()
-                        tc1.addElement(P(text=str(val)))
+                    for key, val in ord_dict.items():  # OrderedDict(ROW1).values():
+                        tc1 = TableCell(stylename=cell_style)
+                        #tc1 = TableCell()
+                        cell_par = cells[key-1].getElementsByType(P)[0]
+                        par_style = cell_par.getAttribute("stylename")
+                        tc1.addElement(P(text=str(val), stylename=par_style))
+                        #tc1.setAttribute("stylename", cell_style)
                         tr1.addElement(tc1)
-                        #print(key, val)
-                    elem.addElement(tr1)
 
+                    #elem.addElement(tr1)
+                    elem.insertBefore(tr1, row1)
+                elem.removeChild(row1)
+                #elem.removeChild(row_last)
 
-            doc.save(doc_name)
+        doc.save(doc_name)
 
 if __name__ == '__main__':
     log_app.PARSER.add_argument('--pg_host', type=str, default='localhost', help='PG host')
