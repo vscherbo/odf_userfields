@@ -6,13 +6,9 @@
 
 from collections import OrderedDict
 from odf.opendocument import load
-from odf.style import Style, TableCellProperties
-#from odf.style import Style, TableColumnProperties, TableCellProperties, ParagraphProperties
-#from odf.text import P, H
+#from odf.style import Style, TableCellProperties
 from odf.text import P
-#from odf.userfield import UserFields
 from odf.table import Table, TableRow, TableCell
-#from odf.table import Table, TableColumn, TableRow
 
 import pg_app
 import log_app
@@ -24,6 +20,7 @@ SELECT "ПозицияСчета", "Наименование", "Ед Изм"
 , round("Кол-во", 1) "Кол-во"
 , round("ЦенаНДС",2) "ЦенаНДС"
 , round ("Кол-во"*"ЦенаНДС", 2) total
+, "Срок2"
 FROM arc_energo."Содержание счета" ss
 WHERE ss."№ счета" = %s
 order by "ПозицияСчета"
@@ -34,25 +31,6 @@ order by "ПозицияСчета"
 #DOC_NAME = u'ДС-82241283.odt'
 DOC_NAME = u'ДС-{}.odt'
 
-
-BILL_ITEMS = [
-    {
-        "ПозицияСчета" : 1,
-        "Наименование" : u"Термостат KTO-011, на DIN-рейку, -10...50°С, Вых.=~10А, 250В",
-        "Ед Изм" : u"шт",
-        "Кол-во" : 20.000,
-        "ЦенаНДС" : 315.7500,
-        "total" : 6315.00
-    },
-    {
-        "ПозицияСчета" : 2,
-        "Наименование" : u"Прибор, Вых.=~10А, 250В",
-        "Ед Изм" : u"шт",
-        "Кол-во" : 2.000,
-        "ЦенаНДС" : 1000.00,
-        "total" : 2000.00
-    }
-    ]
 
 def get_styles(doc):
     """ get doc styles"""
@@ -106,38 +84,15 @@ class FillTable(log_app.LogApp):
         #out_dir = u'/smb/system/Scripts/odf_userfields/Contracts/Docs/Bil/2020'
         doc_name = u"{0}/{1}".format(self.out_dir, self.doc_name) #.decode('utf-8')
 
-        #print('t={0}, o={1}'.format(templ_filename, doc_name))
-
         doc = load(doc_name)
-        bill_cell_style = Style(name="bill cell style", family="table-cell")
-        #ill_cell_style.addElement(TableCellProperties(border="0.3pt solid #000000"))
-        bill_cell_style.addElement(TableCellProperties())
-
-        """
-        pstyle = Style(name="paragraph style", family="paragraph")
-        pstyle.addElement(ParagraphProperties(textalign="center"))
-        money_style = Style(name="money style", family="paragraph")
-        money_style.addElement(ParagraphProperties(textalign="right"))
-        """
-
-        #money_col_style = Style(name="money col style", family="table-column")
-        #money_col_style.addElement(TableColumnProperties(textalign="right"))
-
-        doc.styles.addElement(bill_cell_style)
-        #doc.styles.addElement(pstyle)
-        #doc.styles.addElement(money_style)
-        #doc.styles.addElement(money_col_style)
 
         for elem in doc.getElementsByType(Table):
             if elem.getAttribute('name') == TABLE_ITEMS:
-                #tab = elem
                 row1 = elem.getElementsByType(TableRow)[1]
                 #row_last = elem.getElementsByType(TableRow)[-1]
-                print('row1=', row1)
                 cells = row1.getElementsByType(TableCell)
-                cell_style = cells[0].getAttribute("stylename")
+                cell_style = cells[-1].getAttribute("stylename")
                 for row_bill in self.bill_items:
-                    #print('total=', row_bill["total"])
                     ord_dict = OrderedDict()
                     ord_dict[1] = row_bill["ПозицияСчета"]
                     ord_dict[2] = row_bill["Наименование"]
@@ -145,6 +100,7 @@ class FillTable(log_app.LogApp):
                     ord_dict[4] = row_bill["Кол-во"]
                     ord_dict[5] = row_bill["ЦенаНДС"]
                     ord_dict[6] = row_bill["total"]
+                    ord_dict[7] = row_bill["Срок2"]
 
                     tr1 = TableRow()
                     for key, val in ord_dict.items():  # OrderedDict(ROW1).values():
