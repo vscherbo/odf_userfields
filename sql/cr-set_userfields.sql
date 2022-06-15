@@ -39,7 +39,13 @@ if len(res) != 1:
     plpy.warning(loc_res.encode('utf-8'))
     return loc_res
 else:
-    plpy.notice('res[0]={0}'.format(res[0]))
+    #plpy.notice('res[0]={0}'.format(res[0]))
+    for k,v in res[0].items():
+        if v is not None:
+            plpy.notice('{0}: {1}'.format(k, v))
+        else:
+            plpy.notice('{0}: NONE'.format(k))
+
 
 templ_name = u'{0}/{1}'.format(templ_path, arg_templ.decode('utf-8'))
 plpy.notice('ODT: Template name={0}'.format(templ_name.encode('utf-8')))
@@ -76,8 +82,6 @@ for (k,v) in res[0].items():
             
 if loc_warn:
     loc_res = '/'.join(loc_warn)
-
-plpy.notice(u'upd_dict={0}'.format(upd_dict))
 
 try:
     obj.update(upd_dict)
