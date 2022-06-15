@@ -45,8 +45,6 @@ for f in doc.getElementsByType(Frame):
         h_cm = height*2.54/96
         f.setAttribute("width", "{0}cm".format(w_cm))
         f.setAttribute("height", "{0}cm".format(h_cm))
-        #f.setAttribute("width", "{0}px".format(width))
-        #f.setAttribute("height", "{0}px".format(height))
         for chld in f.childNodes:
             if u'image' in chld.qname:
                 for img in chld.getElementsByType(Image):
@@ -61,6 +59,7 @@ except BaseException:
     (e_type, e_text, e_traceback) = sys.exc_info()
     return u'saving file error: {0}'.format(e_text)
 
+plpy.notice('before RETURN loc_res=[{0}]'.format(loc_res))
 return loc_res
 $BODY$
 LANGUAGE plpython2u;
