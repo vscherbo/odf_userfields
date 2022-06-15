@@ -1,6 +1,6 @@
--- DROP FUNCTION rep.replace_sign_image_common(varchar, varchar, varchar);
+-- DROP FUNCTION rep.replace_image_common(varchar, varchar, varchar);
 
-CREATE OR REPLACE FUNCTION rep.replace_sign_image_common(arg_out_full_filename varchar, arg_img_full_filename varchar, arg_img_name varchar)
+CREATE OR REPLACE FUNCTION rep.replace_image_common(arg_out_full_filename varchar, arg_img_full_filename varchar, arg_img_name varchar)
   RETURNS character varying AS
 $BODY$
 #-*- coding:utf-8 -*-
@@ -64,4 +64,4 @@ return loc_res
 $BODY$
 LANGUAGE plpython2u;
 
-ALTER FUNCTION rep.replace_sign_image_common(varchar, varchar, varchar) OWNER TO arc_energo;
+ALTER FUNCTION rep.replace_image_common(varchar, varchar, varchar) OWNER TO arc_energo;

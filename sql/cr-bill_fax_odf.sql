@@ -79,21 +79,21 @@ pg_firm TEXT
     RAISE NOTICE 'our_firm=%', our_firm;
 
     -- logo
-    -- rep.replace_sign_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/kipenergoservis4.png', 'bill_logo')
+    -- rep.replace_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/kipenergoservis4.png', 'bill_logo')
     SELECT f.bill_logo_file INTO bill_logo_file
     FROM "Фирма" f
     WHERE f."КлючФирмы" = our_firm;
     RAISE NOTICE 'bill_logo_file=%', bill_logo_file;
 
     if bill_logo_file IS NOT NULL then
-        loc_res := rep.replace_sign_image_common(format('%s/%s', out_dir, out_file), 
+        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
                                                   format('%s/%s', templ_dir, bill_logo_file), 'bill_logo');
-        RAISE NOTICE 'LOGO replace_sign_image_common loc_res=%', loc_res;
+        RAISE NOTICE 'LOGO replace_image_common loc_res=%', loc_res;
         if loc_res <> '' then res := concat_ws(E'/', res, loc_res); end if;
     end if;                                    
 
     -- stamp & sign
-    -- rep.replace_sign_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/imgStampКЭСББыков2.gif', 'img_stamp_sign');
+    -- rep.replace_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/imgStampКЭСББыков2.gif', 'img_stamp_sign');
     SELECT stamp_n_sign INTO stamp_sign_file
     FROM "Подписи"                                                               
     WHERE "КодОтчета" = 'СчетФакс'                                               
@@ -103,9 +103,9 @@ pg_firm TEXT
     RAISE NOTICE 'stamp_sign_file=%', stamp_sign_file;
 
     if stamp_sign_file IS NOT NULL then
-        loc_res := rep.replace_sign_image_common(format('%s/%s', out_dir, out_file), 
+        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
                                                    format('%s/%s', templ_dir, stamp_sign_file), 'img_stamp_sign');
-        RAISE NOTICE 'SIGN replace_sign_image_common loc_res=%', loc_res;
+        RAISE NOTICE 'SIGN replace_image_common loc_res=%', loc_res;
         if loc_res <> '' then res := concat_ws(E'/', res, loc_res); end if;
     end if;                                    
 
