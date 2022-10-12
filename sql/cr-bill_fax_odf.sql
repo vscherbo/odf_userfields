@@ -64,7 +64,7 @@ pg_firm TEXT
 , pg_firm_big text
 );'
 , arg_bill_no));
-    RAISE NOTICE 'set_userfields loc_res=%', loc_res;
+    RAISE NOTICE 'set_userfields_common loc_res=%', loc_res;
     if loc_res <> '' then res := concat_ws(E'/', res, loc_res); end if;
 
     -- table
