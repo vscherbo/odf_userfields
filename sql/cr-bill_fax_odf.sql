@@ -1,4 +1,6 @@
-CREATE OR REPLACE FUNCTION rep.bill_fax_odf(arg_bill_no integer)
+-- DROP FUNCTION rep.bill_fax_odf(arg_bill_no integer);
+
+CREATE OR REPLACE FUNCTION rep.bill_fax_odf(arg_bill_no integer, arg_templ varchar DEFAULT 'СчетФакс')
  RETURNS character varying
  LANGUAGE plpgsql
 AS $function$                                                                           
@@ -14,9 +16,16 @@ stamp_sign_file varchar;
 -- res_stamp varchar := 'initial';
 res_stamp varchar;
 BEGIN
+    if arg_templ NOT IN ('СчетФакс', 'Счет') then
+        res := format('недопустимое значение arg_templ={%s}', arg_templ);
+        RAISE NOTICE '%', res;
+        return res;
+    end if;
+
+
     out_dir := format('%s/bill-fax', arc_const('doc_out_dir'));
     templ_dir := arc_const('doc_templ_dir');
-    out_file := format(E'%s-%s-Счет-факс.odt', substring(arg_bill_no::varchar,1,4), substring(arg_bill_no::varchar,5,4));
+    out_file := format(E'%s-%s.odt', _billno_fmt(arg_bill_no), arg_templ);
 
     loc_res := rep.set_userfields_common(format('%s/bill_fax_template.odt', templ_dir),
                                          format(E'%s/%s', out_dir, out_file), 
@@ -96,7 +105,7 @@ pg_firm TEXT
     -- rep.replace_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/imgStampКЭСББыков2.gif', 'img_stamp_sign');
     SELECT stamp_n_sign INTO stamp_sign_file
     FROM "Подписи"                                                               
-    WHERE "КодОтчета" = 'СчетФакс'                                               
+    WHERE "КодОтчета" = arg_templ -- 'СчетФакс'                                               
           AND "НомерСотрудника" = 0                                              
           AND "КлючФирмы" = our_firm
     ORDER BY "ДатаСтартаПодписи" DESC LIMIT 1;
