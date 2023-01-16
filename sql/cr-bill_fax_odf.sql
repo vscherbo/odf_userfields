@@ -3,7 +3,7 @@
 CREATE OR REPLACE FUNCTION rep.bill_fax_odf(arg_bill_no integer, arg_templ varchar DEFAULT 'СчетФакс')
  RETURNS character varying
  LANGUAGE plpgsql
-AS $function$                                                                           
+AS $function$
 DECLARE
 res varchar := '';
 loc_res varchar;
@@ -28,7 +28,7 @@ BEGIN
     out_file := format(E'%s-%s.odt', _billno_fmt(arg_bill_no), arg_templ);
 
     loc_res := rep.set_userfields_common(format('%s/bill_fax_template.odt', templ_dir),
-                                         format(E'%s/%s', out_dir, out_file), 
+                                         format(E'%s/%s', out_dir, out_file),
                                          format('select * from bill_fax_data (%s)
 AS (
 pg_firm TEXT
@@ -45,10 +45,10 @@ pg_firm TEXT
 , pg_bank text
 , pg_corresp text
 , pg_bik text
-, pg_total text 
+, pg_total text
 , pg_order text
 , pg_order_date text
-, pg_vat text 
+, pg_vat text
 , pg_add text
 , pg_carrier text
 , pg_email text
@@ -56,11 +56,11 @@ pg_firm TEXT
 , pg_mob_label text
 , pg_mob_phone text
 , pg_firm_phone text
-, pg_mgr_name text 
-, pg_firm_buyer text 
+, pg_mgr_name text
+, pg_firm_buyer text
 , pg_fax TEXT
 , pg_firm_key text
-, pg_legal_address text 
+, pg_legal_address text
 , pg_buyer_address text
 , pg_buyer_inn text
 , pg_buyer_kpp text
@@ -95,36 +95,29 @@ pg_firm TEXT
     RAISE NOTICE 'bill_logo_file=%', bill_logo_file;
 
     if bill_logo_file IS NOT NULL then
-        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
+        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file),
                                                   format('%s/%s', templ_dir, bill_logo_file), 'bill_logo');
         RAISE NOTICE 'LOGO replace_image_common loc_res=%', loc_res;
         if loc_res <> '' then res := concat_ws(E'/', res, loc_res); end if;
-    end if;                                    
+    end if;
 
     -- stamp & sign
     -- rep.replace_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/imgStampКЭСББыков2.gif', 'img_stamp_sign');
     SELECT stamp_n_sign INTO stamp_sign_file
     FROM "Подписи"                                                               
-    WHERE "КодОтчета" = arg_templ -- 'СчетФакс'                                               
+    WHERE "КодОтчета" = arg_templ -- 'СчетФакс'
           AND "НомерСотрудника" = 0                                              
           AND "КлючФирмы" = our_firm
     ORDER BY "ДатаСтартаПодписи" DESC LIMIT 1;
     RAISE NOTICE 'stamp_sign_file=%', stamp_sign_file;
 
     if stamp_sign_file IS NOT NULL then
-        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
+        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file),
                                                    format('%s/%s', templ_dir, stamp_sign_file), 'img_stamp_sign');
         RAISE NOTICE 'SIGN replace_image_common loc_res=%', loc_res;
         if loc_res <> '' then res := concat_ws(E'/', res, loc_res); end if;
-    end if;                                    
+    end if;
 
-/**
-odt2pdf_query = "SELECT odt2pdf('" + outfile + "');"                             
-odt2pdf_query = odt2pdf_query.encode('utf8')                                     
-res = plpy.execute(odt2pdf_query)                                                
-#return outfile                                                                  
-return res[0]["odt2pdf"]                                                         
-**/
     loc_res := odt2pdf(out_file, out_dir, out_dir);
     RAISE NOTICE 'odt2pdf loc_res=%', loc_res;
 
