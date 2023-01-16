@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION rep.bill_fax_odf(arg_bill_no integer, arg_templ character varying DEFAULT 'СчетФакс'::character varying)
  RETURNS character varying
  LANGUAGE plpgsql
-AS $function$                                                                           
+AS $function$
 DECLARE
 res varchar := '';
 loc_res varchar;
