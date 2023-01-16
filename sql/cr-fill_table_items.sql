@@ -1,4 +1,5 @@
--- DROP FUNCTION rep.fill_table_items(integer, varchar, varchar);
+--
+DROP FUNCTION rep.fill_table_items(integer, varchar, varchar);
 
 CREATE OR REPLACE FUNCTION rep.fill_table_items(
     arg_bill integer DEFAULT NULL,
@@ -9,11 +10,14 @@ CREATE OR REPLACE FUNCTION rep.fill_table_items(
 AS
 $BODY$
 DECLARE cmd character varying;
+  loc_res VARCHAR;
+  res VARCHAR := '';
   ret_str VARCHAR := '';
   err_str VARCHAR := '';
   wrk_dir text := '/opt/odf';
   org_cmd text := 'python3 %s/fill_table_items.py --pg_host=localhost --pg_user=arc_energo --log_file=%s/fill-bill.log';
 BEGIN
+    RAISE NOTICE 'START rep.fill_table_items billno=%', arg_bill ;
     cmd := format(org_cmd,
         wrk_dir, -- script dir
         format('%s/logs', wrk_dir) -- logfile dir
@@ -27,23 +31,32 @@ BEGIN
         cmd := format('%s --out_dir=%s', cmd, arg_dir);
     END IF;                                                                      
 
-    IF cmd = org_cmd THEN 
-       err_str := 'fill_table_items: argument(s) missed';
-       RAISE '%', err_str ; 
+    IF cmd = org_cmd THEN
+       loc_res := 'fill_table_items: argument(s) missed';
+       res := concat_ws(E'/', res, loc_res);
+       RAISE NOTICE '%', loc_res ;
     END IF;
 
-    IF cmd IS NULL THEN 
-       err_str := 'fill_table_items cmd IS NULL';
-       RAISE '%', err_str ; 
+    IF cmd IS NULL THEN
+       loc_res := 'fill_table_items cmd IS NULL';
+       res := concat_ws(E'/', res, loc_res);
+       RAISE NOTICE '%', loc_res ;
     END IF;
 
-    SELECT * FROM public.exec_shell(cmd) INTO ret_str, err_str ;
-    
-    IF err_str IS NOT NULL
-    THEN 
-       RAISE 'fill_table_items cmd=%^err_str=[%]', cmd, err_str; 
-    END IF;
-    
+    if res = '' then -- собранные ошибки
+        SELECT * FROM public.exec_shell(cmd) INTO ret_str, err_str ;
+
+        IF err_str IS NOT NULL
+        THEN
+           res := concat_ws(E'/', res, err_str);
+           RAISE NOTICE '%', err_str;
+           ret_str := res;
+        END IF;
+    else
+        ret_str := res;
+        RAISE NOTICE 'НЕ заполняли таблицу в счёте: res=%', res ;
+    end if;
+
     return ret_str;
 END;$BODY$
   LANGUAGE plpgsql VOLATILE
