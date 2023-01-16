@@ -44,10 +44,10 @@ pg_firm TEXT
 , pg_bank text
 , pg_corresp text
 , pg_bik text
-, pg_total text 
+, pg_total text
 , pg_order text
 , pg_order_date text
-, pg_vat text 
+, pg_vat text
 , pg_add text
 , pg_carrier text
 , pg_email text
@@ -55,11 +55,11 @@ pg_firm TEXT
 , pg_mob_label text
 , pg_mob_phone text
 , pg_firm_phone text
-, pg_mgr_name text 
-, pg_firm_buyer text 
+, pg_mgr_name text
+, pg_firm_buyer text
 , pg_fax TEXT
 , pg_firm_key text
-, pg_legal_address text 
+, pg_legal_address text
 , pg_buyer_address text
 , pg_buyer_inn text
 , pg_buyer_kpp text
@@ -99,7 +99,7 @@ pg_firm TEXT
     RAISE NOTICE 'bill_logo_file=%', bill_logo_file;
 
     if bill_logo_file IS NOT NULL then
-        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
+        loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file),
                                                   format('%s/%s', templ_dir, bill_logo_file), 'bill_logo');
         if loc_res <> '' then
             res := concat_ws(E'/', res, loc_res);
