@@ -130,13 +130,26 @@ pg_firm TEXT
         end if;
     end if; -- не 'Счет'
 
-/**
-odt2pdf_query = "SELECT odt2pdf('" + outfile + "');"                             
-odt2pdf_query = odt2pdf_query.encode('utf8')                                     
-res = plpy.execute(odt2pdf_query)                                                
-#return outfile                                                                  
-return res[0]["odt2pdf"]                                                         
-**/
+    -- A technical consultant's contacts
+    loc_res := rep.set_userfields_common(format(E'%s/%s', out_dir, out_file),
+                                         format(E'%s/%s', out_dir, out_file),
+                                         format('select * from bill_fax_tech_concultant (%s)
+AS (
+pg_tech_mgr TEXT
+, pg_tech_mgr_name TEXT
+, pg_tech_mgr_phone TEXT
+, pg_tech_mgr_phone_num TEXT
+, pg_tech_mgr_email TEXT
+, pg_tech_mgr_email_addr TEXT
+, pg_tech_mgr_msngr TEXT
+, pg_tech_mgr_msngr_num TEXT
+);'
+, arg_bill_no));
+    if loc_res <> '' then
+        res := concat_ws(E'/', res, loc_res);
+        RAISE NOTICE 'set_userfields_common tech consultant loc_res=%', loc_res;
+    end if;
+
     if res = '' then -- не было ошибок
         loc_res := odt2pdf(out_file, out_dir, out_dir);
         RAISE NOTICE 'odt2pdf loc_res=%', loc_res;
