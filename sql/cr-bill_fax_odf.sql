@@ -67,6 +67,7 @@ pg_firm TEXT
 , pg_total_pos text
 , pg_sum_in_words text
 , pg_message text
+, pg_assembly text
 , pg_vat_str text
 , pg_logo text
 , pg_firm_big text
@@ -133,7 +134,7 @@ pg_firm TEXT
     -- A technical consultant's contacts
     loc_res := rep.set_userfields_common(format(E'%s/%s', out_dir, out_file),
                                          format(E'%s/%s', out_dir, out_file),
-                                         format('select * from bill_fax_tech_concultant (%s)
+                                         format('select * from arc_energo.bill_fax_tech_consultant (%s)
 AS (
 pg_tech_mgr TEXT
 , pg_tech_mgr_name TEXT
