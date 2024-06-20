@@ -15,7 +15,8 @@ DECLARE cmd character varying;
   ret_str VARCHAR := '';
   err_str VARCHAR := '';
   wrk_dir text := '/opt/odf';
-  org_cmd text := 'python3 %s/fill_table_items.py --pg_host=localhost --pg_user=arc_energo --log_file=%s/fill-bill.log';
+  -- org_cmd text := 'python3 %s/fill_table_items.py --pg_host=localhost --pg_user=arc_energo --log_file=%s/fill-bill.log';
+  org_cmd text := '%s/fill_table_items.py --pg_host=localhost --pg_user=arc_energo --log_file=%s/fill-bill.log';
 BEGIN
     RAISE NOTICE 'START rep.fill_table_items billno=%', arg_bill ;
     cmd := format(org_cmd,
