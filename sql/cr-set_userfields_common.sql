@@ -32,14 +32,15 @@ try:
     doc = load(templ_name)
 except BaseException:
     (e_type, e_text, e_traceback) = sys.exc_info()
-    return u'{0}: {1}'.format(templ_name, e_text)
+    return u'{0}: {1} {2}'.format(templ_name, e_text, e_traceback)
 
 out_name = arg_out_full_filename.decode('utf-8')
 try:
     doc.save(out_name)
 except BaseException:
     (e_type, e_text, e_traceback) = sys.exc_info()
-    return u'{0}: {1}'.format(out_name, e_text)
+    #return u'{0}: {1}'.format(out_name, e_text)
+    return u'{0}: {1} {2}'.format(templ_name, e_text, e_traceback)
 
 try:
     obj = UserFields(out_name, out_name)
