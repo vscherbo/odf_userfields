@@ -16,6 +16,8 @@ from PIL import Image as PImage
 loc_res = ''
 out_full_filename = arg_out_full_filename.decode('utf-8')
 
+plpy.notice('START arg_out_full_filename={0}, arg_img_full_filename={1}, arg_img_full_filename={2}'.format(arg_out_full_filename, arg_img_full_filename, arg_img_name))
+
 try:
     doc = load(out_full_filename)
 except BaseException:
