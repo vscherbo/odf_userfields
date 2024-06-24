@@ -1,6 +1,11 @@
 CREATE OR REPLACE FUNCTION rep.bill_fax_odf(arg_bill_no integer, arg_templ character varying DEFAULT 'СчетФакс'::character varying)
  RETURNS character varying
  LANGUAGE plpgsql
+/**
+arg_templ 'СчетФакс'
+arg_templ 'Счет', без подписи-печати
+arg_templ 'Счет-QR' для физлиц с QR-кодом
+**/
 AS $function$
 DECLARE
 res varchar := '';
@@ -11,10 +16,15 @@ out_file varchar;
 bill_logo_file varchar;
 our_firm varchar;
 stamp_sign_file varchar;
+qr_file varchar;
 -- res_stamp varchar := 'initial';
 res_stamp varchar;
+loc_templ_file varchar;
+qr_dir varchar;
+loc_url varchar;
+loc_qr_enabled boolean; 
 BEGIN
-    if arg_templ NOT IN ('СчетФакс', 'Счет') then
+    if arg_templ NOT IN ('СчетФакс', 'Счет', 'Счет-QR') then
         res := format('недопустимое значение arg_templ={%s}', arg_templ);
         RAISE NOTICE '%', res;
         return res;
@@ -22,10 +32,18 @@ BEGIN
 
 
     out_dir := format('%s/bill-fax', arc_const('doc_out_dir'));
+    qr_dir := format('%s/qr', out_dir);
     templ_dir := arc_const('doc_templ_dir');
     out_file := format(E'%s-%s.odt', _billno_fmt(arg_bill_no), arg_templ);
 
-    loc_res := rep.set_userfields_common(format('%s/bill_fax_template.odt', templ_dir),
+    if arg_templ IN ('СчетФакс', 'Счет') then
+        loc_templ_file := format('%s/bill_fax_template.odt', templ_dir);
+    else -- Счет-QR
+        loc_templ_file := format('%s/bill_qr_template.odt', templ_dir);
+    end if;
+
+    -- loc_res := rep.set_userfields_common(format('%s/bill_fax_template.odt', templ_dir),
+    loc_res := rep.set_userfields_common(loc_templ_file,
                                          format(E'%s/%s', out_dir, out_file), 
                                          format('select * from bill_fax_data (%s, %s)
 AS (
@@ -112,9 +130,10 @@ pg_firm TEXT
     if arg_templ <> 'Счет' then  -- TODO оформить функцией с принятием решения
         -- rep.replace_image_common('/opt/DogUF/Docs/bill-fax-41260884.odt', '/var/lib/pgsql/fill-forms/signs-replica/imgStampКЭСББыков2.gif', 'img_stamp_sign');
         SELECT stamp_n_sign INTO stamp_sign_file
-        FROM "Подписи"                                                               
-        WHERE "КодОтчета" = arg_templ -- 'СчетФакс'                                               
-              AND "НомерСотрудника" = 0                                              
+        FROM "Подписи"
+        -- WHERE "КодОтчета" = arg_templ -- 'СчетФакс'
+        WHERE "КодОтчета" = 'СчетФакс'
+              AND "НомерСотрудника" = 0
               AND "КлючФирмы" = our_firm
         ORDER BY "ДатаСтартаПодписи" DESC LIMIT 1;
         RAISE NOTICE 'stamp_sign_file=%', stamp_sign_file;
@@ -130,6 +149,35 @@ pg_firm TEXT
             RAISE NOTICE 'stamp_sign_file is NULL for billno=%', arg_bill_no;
         end if;
     end if; -- не 'Счет'
+
+    -- stamp & sign
+    -- if arg_templ == 'Счет-QR'::varchar then
+    if arg_templ = 'Счет-QR' then
+        -- generate QR
+        loc_qr_enabled := arc_const('qr_enabled') = 'Y' ;
+        if loc_qr_enabled then
+            loc_url := cash.vtb_pay(arg_bill_no);
+        else
+            loc_url := '';
+        end if;
+
+        if loc_url IS NOT NULL then
+            if loc_qr_enabled then
+                qr_file := format('%s/qr_%s.png', qr_dir, arg_bill_no);
+            else
+                qr_file := format('%s/qr_blank.png', qr_dir);
+            end if;
+            RAISE NOTICE 'qr_file=% for billno=%', qr_file, arg_bill_no;
+            loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
+                                                       qr_file, 'img_qr');
+            if loc_res <> '' then
+                res := concat_ws(E'/', res, loc_res);
+                RAISE NOTICE 'QR-код replace_image_common loc_res=%', loc_res;
+            end if;
+        else
+            RAISE NOTICE 'qr_url is NULL for billno=%', arg_bill_no;
+        end if;
+    end if; -- 'Счет-QR'
 
     -- A technical consultant's contacts
     loc_res := rep.set_userfields_common(format(E'%s/%s', out_dir, out_file),
