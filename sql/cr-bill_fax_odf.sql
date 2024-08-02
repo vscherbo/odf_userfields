@@ -16,7 +16,7 @@ out_file varchar;
 bill_logo_file varchar;
 our_firm varchar;
 stamp_sign_file varchar;
-qr_file varchar;
+qr_file varchar ;
 -- res_stamp varchar := 'initial';
 res_stamp varchar;
 loc_templ_file varchar;
@@ -154,19 +154,23 @@ pg_firm TEXT
     -- if arg_templ == 'Счет-QR'::varchar then
     if arg_templ = 'Счет-QR' then
         -- generate QR
-        loc_qr_enabled := arc_const('qr_enabled') = 'Y' ;
+        loc_qr_enabled := rep.is_qr_enabled(arg_bill_no);
+        RAISE NOTICE 'loc_qr_enabled=%', loc_qr_enabled;
         if loc_qr_enabled then
-            loc_url := cash.vtb_pay(arg_bill_no);
+            -- DEBUG function
+            loc_url := cash.vtb_pay_r(arg_bill_no);
+            if strpos(loc_url, 'https://qr.nspk.ru') > 0 then
+                -- RAISE NOTICE 'Ok: loc_url=[%] for billno=%', loc_url, arg_bill_no;
+                qr_file := format('%s/qr_%s.png', qr_dir, arg_bill_no);
+            else -- сбой QR
+                loc_res := loc_url;
+                RAISE E'qr_url не сформирован. ERR=% for billno=%.\nПовторите попытку', loc_url, arg_bill_no;
+            end if;
         else
-            loc_url := '';
+            qr_file := format('%s/qr_blank.png', qr_dir);
         end if;
 
-        if loc_url IS NOT NULL then
-            if loc_qr_enabled then
-                qr_file := format('%s/qr_%s.png', qr_dir, arg_bill_no);
-            else
-                qr_file := format('%s/qr_blank.png', qr_dir);
-            end if;
+        if qr_file is not NULL then
             RAISE NOTICE 'qr_file=% for billno=%', qr_file, arg_bill_no;
             loc_res := rep.replace_image_common(format('%s/%s', out_dir, out_file), 
                                                        qr_file, 'img_qr');
@@ -174,9 +178,7 @@ pg_firm TEXT
                 res := concat_ws(E'/', res, loc_res);
                 RAISE NOTICE 'QR-код replace_image_common loc_res=%', loc_res;
             end if;
-        else
-            RAISE NOTICE 'qr_url is NULL for billno=%', arg_bill_no;
-        end if;
+        end if; -- qr_file
     end if; -- 'Счет-QR'
 
     -- A technical consultant's contacts
