@@ -4,16 +4,24 @@ CREATE OR REPLACE FUNCTION rep.is_qr_enabled(arg_bill_no integer)
  RETURNS boolean
  LANGUAGE plpgsql
 AS $function$
+DECLARE
+loc_manual_qr boolean;
+loc_bx_qr boolean;
 BEGIN
--- SELECT TRUE ;
 PERFORM 1
 FROM bx_order bo
 JOIN bx_order_feature bof ON bo."Номер" = bof."bx_order_Номер" AND bof.fname = 'Метод оплаты' AND bof.fvalue = 'Оплата через СБП'
 WHERE bo.Счет = arg_bill_no;
 
-RAISE NOTICE 'found=%', FOUND;
+loc_bx_qr := FOUND;
+RAISE NOTICE 'is_qr_enabled: Оплата через СБП loc_bx_qr=%', loc_bx_qr;
 
-RETURN FOUND AND (arc_const('qr_enabled') = 'Y');
+PERFORM 1 FROM "Счета" b
+WHERE b."№ счета" = arg_bill_no AND ps_id=7 ;
+loc_manual_qr := FOUND;
+RAISE NOTICE 'is_qr_enabled: loc_manual_qr=%', loc_manual_qr;
+
+RETURN (loc_bx_qr OR loc_manual_qr) AND (arc_const('qr_enabled') = 'Y');
 END;
 $function$
 ;
