@@ -10,7 +10,9 @@ loc_bx_qr boolean;
 BEGIN
 PERFORM 1
 FROM bx_order bo
-JOIN bx_order_feature bof ON bo."Номер" = bof."bx_order_Номер" AND bof.fname = 'Метод оплаты' AND bof.fvalue = 'Оплата через СБП'
+JOIN bx_order_feature bof ON bo."Номер" = bof."bx_order_Номер" AND bof.fname = 'Метод оплаты' 
+                            --AND bof.fvalue = 'Оплата через СБП'
+                            AND bof.fvalue IN ('Оплата через СБП', 'Наличный расчет', 'ЮKassa')
 WHERE bo.Счет = arg_bill_no;
 
 loc_bx_qr := FOUND;
