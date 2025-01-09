@@ -45,7 +45,7 @@ BEGIN
     -- loc_res := rep.set_userfields_common(format('%s/bill_fax_template.odt', templ_dir),
     loc_res := rep.set_userfields_common(loc_templ_file,
                                          format(E'%s/%s', out_dir, out_file), 
-                                         format('select * from bill_fax_data (%s, %s)
+                                         format('select * from bill_fax_data (%s, %s) -- 1c-bitrix-orders/devel/fill-forms
 AS (
 pg_firm TEXT
 , pg_position text
@@ -89,6 +89,7 @@ pg_firm TEXT
 , pg_vat_str text
 , pg_logo text
 , pg_firm_big text
+, pg_url_info text
 );'
 , arg_bill_no, quote_literal(arg_templ)));
     if loc_res <> '' then
@@ -134,6 +135,7 @@ pg_firm TEXT
         -- WHERE "КодОтчета" = arg_templ -- 'СчетФакс'
         WHERE "КодОтчета" = 'СчетФакс'
               AND "НомерСотрудника" = 0
+              AND "ДатаСтартаПодписи" <= (SELECT "Дата счета" FROM "Счета" WHERE "№ счета" = arg_bill_no )
               AND "КлючФирмы" = our_firm
         ORDER BY "ДатаСтартаПодписи" DESC LIMIT 1;
         RAISE NOTICE 'stamp_sign_file=%', stamp_sign_file;
